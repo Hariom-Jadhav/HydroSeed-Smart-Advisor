@@ -1,0 +1,13 @@
+{
+  "name": "hydroseed-smart-advisor",
+  "version": "1.0.0",
+  "description": "Root package to run both client and server simultaneously",
+  "scripts": {
+    "start": "concurrently \"npm run start --prefix server\" \"npm run start --prefix client\"",
+    "dev": "concurrently \"npm run dev --prefix server\" \"npm run dev --prefix client\"",
+    "install-all": "npm install && npm install --prefix client && npm install --prefix server"
+  },
+  "devDependencies": {
+    "concurrently": "^8.2.2"
+  }
+}
