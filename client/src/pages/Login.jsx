@@ -9,6 +9,7 @@ const Login = () => {
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [role, setRole] = useState('user');
 
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
@@ -22,15 +23,19 @@ const Login = () => {
 
     try {
       const endpoint = isLogin ? '/api/v1/auth/login' : '/api/v1/auth/signup';
-      const payload = isLogin ? { email, password } : { name, email, password };
+      const payload = isLogin ? { email, password } : { name, email, password, role };
       
       const res = await axios.post(`http://localhost:5000${endpoint}`, payload);
       
       if(res.data.status === 'success') {
         localStorage.setItem('token', res.data.token);
         localStorage.setItem('user', JSON.stringify(res.data.data.user));
-        // Redirect to Dashboard
-        navigate('/dashboard');
+        // Redirect to Profile if registering, otherwise to Dashboard
+        if (isLogin) {
+          navigate('/dashboard');
+        } else {
+          navigate('/profile');
+        }
       }
     } catch (err) {
       setError(err.response?.data?.message || 'Something went wrong. Please try again.');
@@ -69,6 +74,20 @@ const Login = () => {
                 required
                 className="w-full pl-10 pr-4 py-3 bg-white border border-slate-200 rounded-xl focus:ring-2 focus:ring-primary-500 focus:border-primary-500 outline-none transition-all shadow-sm"
               />
+            </div>
+          )}
+
+          {!isLogin && (
+            <div className="relative">
+              <FiUser className="absolute left-3 top-3.5 text-slate-400 text-lg" />
+              <select
+                value={role}
+                onChange={(e) => setRole(e.target.value)}
+                className="w-full pl-10 pr-4 py-3 bg-white border border-slate-200 rounded-xl focus:ring-2 focus:ring-primary-500 focus:border-primary-500 outline-none transition-all shadow-sm appearance-none"
+              >
+                <option value="user">User (Customer)</option>
+                <option value="contractor">Contractor (Service Provider)</option>
+              </select>
             </div>
           )}
 

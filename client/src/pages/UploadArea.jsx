@@ -1,11 +1,20 @@
-import React, { useState, useCallback } from 'react';
+import React, { useState, useCallback, useEffect } from 'react';
 import { useDropzone } from 'react-dropzone';
 import { FiUploadCloud, FiMap, FiCheckCircle } from 'react-icons/fi';
+import { useNavigate } from 'react-router-dom';
 
 const UploadArea = () => {
   const [file, setFile] = useState(null);
   const [isAnalyzing, setIsAnalyzing] = useState(false);
   const [result, setResult] = useState(null);
+  const navigate = useNavigate();
+
+  useEffect(() => {
+    const token = localStorage.getItem('token');
+    if (!token) {
+      navigate('/login');
+    }
+  }, [navigate]);
 
   const onDrop = useCallback(acceptedFiles => {
     setFile(acceptedFiles[0]);
@@ -26,6 +35,12 @@ const UploadArea = () => {
         score: 84,
         soilType: 'Clay Loam',
         drainage: 'Moderate',
+        moisture: 'Low (22%)',
+        phLevel: '6.5 (Slightly Acidic)',
+        organicMatter: '3.5% (Good)',
+        compaction: 'High',
+        erosionRisk: 'Moderate to High',
+        slopeAngle: '15 degrees',
         recommendation: 'Add mulching for better moisture retention on slopes.'
       });
     }, 2500);
@@ -97,7 +112,7 @@ const UploadArea = () => {
                 <p className="text-green-600 font-medium bg-green-100 inline-block px-3 py-1 rounded-full text-sm">Highly Suitable</p>
               </div>
               
-              <div className="grid grid-cols-2 gap-4">
+              <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
                 <div className="p-4 bg-slate-50 rounded-xl border border-slate-100">
                   <span className="text-xs text-slate-500 block mb-1">Detected Soil Type</span>
                   <span className="font-bold text-slate-800">{result.soilType}</span>
@@ -105,6 +120,30 @@ const UploadArea = () => {
                 <div className="p-4 bg-slate-50 rounded-xl border border-slate-100">
                   <span className="text-xs text-slate-500 block mb-1">Drainage Estimate</span>
                   <span className="font-bold text-slate-800">{result.drainage}</span>
+                </div>
+                <div className="p-4 bg-slate-50 rounded-xl border border-slate-100">
+                  <span className="text-xs text-slate-500 block mb-1">Moisture</span>
+                  <span className="font-bold text-slate-800">{result.moisture}</span>
+                </div>
+                <div className="p-4 bg-slate-50 rounded-xl border border-slate-100">
+                  <span className="text-xs text-slate-500 block mb-1">pH Level</span>
+                  <span className="font-bold text-slate-800">{result.phLevel}</span>
+                </div>
+                <div className="p-4 bg-slate-50 rounded-xl border border-slate-100">
+                  <span className="text-xs text-slate-500 block mb-1">Organic Matter</span>
+                  <span className="font-bold text-slate-800">{result.organicMatter}</span>
+                </div>
+                <div className="p-4 bg-slate-50 rounded-xl border border-slate-100">
+                  <span className="text-xs text-slate-500 block mb-1">Compaction</span>
+                  <span className="font-bold text-slate-800">{result.compaction}</span>
+                </div>
+                <div className="p-4 bg-slate-50 rounded-xl border border-slate-100">
+                  <span className="text-xs text-slate-500 block mb-1">Erosion Risk</span>
+                  <span className="font-bold text-slate-800">{result.erosionRisk}</span>
+                </div>
+                <div className="p-4 bg-slate-50 rounded-xl border border-slate-100">
+                  <span className="text-xs text-slate-500 block mb-1">Slope Angle</span>
+                  <span className="font-bold text-slate-800">{result.slopeAngle}</span>
                 </div>
               </div>
 

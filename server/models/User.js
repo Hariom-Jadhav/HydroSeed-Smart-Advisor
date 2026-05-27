@@ -17,6 +17,26 @@ const userSchema = new mongoose.Schema({
     enum: ['user', 'contractor', 'admin'],
     default: 'user',
   },
+  userType: {
+    type: String,
+    enum: ['customer', 'service_provider'],
+    default: 'customer',
+  },
+  phone: {
+    type: String,
+  },
+  address: {
+    type: String,
+  },
+  companyName: {
+    type: String,
+  },
+  pricePerSqFt: {
+    type: Number,
+  },
+  bio: {
+    type: String,
+  },
   password: {
     type: String,
     required: [true, 'Please provide a password'],

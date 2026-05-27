@@ -9,6 +9,8 @@ const globalErrorHandler = require('./middlewares/errorMiddleware');
 
 // Import Routes
 const authRouter = require('./routes/authRoutes');
+const userRouter = require('./routes/userRoutes');
+const messageRouter = require('./routes/messageRoutes');
 
 // Load env vars
 dotenv.config();
@@ -24,8 +26,9 @@ app.use(cors());
 app.use(express.json()); // Body parser
 
 // Mount Routes
-app.use('/api/v1/users', authRouter);
 app.use('/api/v1/auth', authRouter);
+app.use('/api/v1/users', userRouter);
+app.use('/api/v1/messages', messageRouter);
 
 // Health Check Endpoint
 app.get('/api/health', (req, res) => {

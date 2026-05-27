@@ -56,6 +56,32 @@ const Home = () => {
         </div>
       </section>
 
+      {/* Information Section */}
+      <section className="py-20 bg-slate-50 border-b border-slate-100">
+        <div className="max-w-7xl mx-auto px-6">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-12">
+            <div className="glass p-8 rounded-3xl bg-white border border-green-100 shadow-sm hover:shadow-md transition-shadow">
+              <h2 className="text-2xl font-bold text-slate-900 mb-4 flex items-center gap-3">
+                <div className="p-2 bg-green-100 rounded-lg text-green-600"><FiSun /></div>
+                What is Hydroseeding?
+              </h2>
+              <p className="text-slate-600 leading-relaxed text-lg">
+                Hydroseeding is a seeding technique which involves the preparation of a hydroseed medium or mulch that combines seed and specialist mulch products with water.
+              </p>
+            </div>
+            <div className="glass p-8 rounded-3xl bg-white border border-blue-100 shadow-sm hover:shadow-md transition-shadow">
+              <h2 className="text-2xl font-bold text-slate-900 mb-4 flex items-center gap-3">
+                <div className="p-2 bg-blue-100 rounded-lg text-blue-600"><FiMapPin /></div>
+                Where Hydroseeding?
+              </h2>
+              <p className="text-slate-600 leading-relaxed text-lg">
+                Hydroseeding has proven to be an environmentally-friendly solution for revegetation in various projects, including highway projects, golf courses, mining reclamation sites.
+              </p>
+            </div>
+          </div>
+        </div>
+      </section>
+
       {/* Features Section */}
       <section className="py-24 bg-white relative">
         <div className="max-w-7xl mx-auto px-6">
