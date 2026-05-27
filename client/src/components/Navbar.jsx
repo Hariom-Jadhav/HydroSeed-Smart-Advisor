@@ -2,6 +2,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import axios from 'axios';
 import { FiDroplet, FiMenu, FiX, FiUser, FiPhone, FiMapPin, FiLogOut, FiBriefcase, FiAlertTriangle, FiBell } from 'react-icons/fi';
+import { API_URL } from '../config';
 
 const Navbar = () => {
   const [isOpen, setIsOpen] = useState(false);
@@ -35,7 +36,7 @@ const Navbar = () => {
     const savedToken = localStorage.getItem('token');
     if (savedToken) {
       try {
-        const res = await axios.get('http://localhost:5000/api/v1/messages/unread-count', {
+        const res = await axios.get(`${API_URL}/api/v1/messages/unread-count`, {
           headers: { Authorization: `Bearer ${savedToken}` }
         });
         if (res.data.status === 'success') {

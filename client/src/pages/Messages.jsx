@@ -2,6 +2,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import axios from 'axios';
 import { FiSend, FiUser, FiMessageSquare } from 'react-icons/fi';
 import { useLocation } from 'react-router-dom';
+import { API_URL } from '../config';
 
 const Messages = () => {
   const [conversations, setConversations] = useState([]);
@@ -42,7 +43,7 @@ const Messages = () => {
 
   const fetchConversations = async () => {
     try {
-      const res = await axios.get('http://localhost:5000/api/v1/messages/conversations', {
+      const res = await axios.get(`${API_URL}/api/v1/messages/conversations`, {
         headers: { Authorization: `Bearer ${token}` }
       });
       if (res.data.status === 'success') {
@@ -57,7 +58,7 @@ const Messages = () => {
 
   const fetchMessages = async (userId) => {
     try {
-      const res = await axios.get(`http://localhost:5000/api/v1/messages/${userId}`, {
+      const res = await axios.get(`${API_URL}/api/v1/messages/${userId}`, {
         headers: { Authorization: `Bearer ${token}` }
       });
       if (res.data.status === 'success') {
@@ -84,7 +85,7 @@ const Messages = () => {
         receiverId: activeChat._id,
         content: newMessage
       };
-      const res = await axios.post('http://localhost:5000/api/v1/messages', payload, {
+      const res = await axios.post(`${API_URL}/api/v1/messages`, payload, {
         headers: { Authorization: `Bearer ${token}` }
       });
 

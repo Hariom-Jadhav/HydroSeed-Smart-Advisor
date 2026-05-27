@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { FiMail, FiLock, FiUser } from 'react-icons/fi';
 import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
+import { API_URL } from '../config';
 
 const Login = () => {
   const [isLogin, setIsLogin] = useState(true);
@@ -25,7 +26,7 @@ const Login = () => {
       const endpoint = isLogin ? '/api/v1/auth/login' : '/api/v1/auth/signup';
       const payload = isLogin ? { email, password } : { name, email, password, role };
       
-      const res = await axios.post(`http://localhost:5000${endpoint}`, payload);
+      const res = await axios.post(`${API_URL}${endpoint}`, payload);
       
       if(res.data.status === 'success') {
         localStorage.setItem('token', res.data.token);

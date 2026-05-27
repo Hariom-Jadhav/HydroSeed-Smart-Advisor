@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 import { useNavigate } from 'react-router-dom';
 import { FiUser, FiMapPin, FiPhone, FiBriefcase, FiCheck } from 'react-icons/fi';
+import { API_URL } from '../config';
 
 const Profile = () => {
   const navigate = useNavigate();
@@ -63,7 +64,7 @@ const Profile = () => {
 
     try {
       const token = localStorage.getItem('token');
-      const res = await axios.patch('http://localhost:5000/api/v1/users/updateMe', formData, {
+      const res = await axios.patch(`${API_URL}/api/v1/users/updateMe`, formData, {
         headers: {
           Authorization: `Bearer ${token}`
         }

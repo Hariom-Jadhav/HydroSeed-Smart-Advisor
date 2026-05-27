@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { FiTrendingUp, FiMap, FiAward, FiLock, FiMessageSquare, FiBriefcase, FiUser, FiActivity, FiStar, FiCheckCircle } from 'react-icons/fi';
 import { Link, useNavigate } from 'react-router-dom';
 import axios from 'axios';
+import { API_URL } from '../config';
 
 const Dashboard = () => {
   const navigate = useNavigate();
@@ -28,7 +29,7 @@ const Dashboard = () => {
         try {
           setLoading(true);
           const typeToFetch = currentUser.role === 'contractor' ? 'customer' : 'service_provider';
-          const res = await axios.get(`http://localhost:5000/api/v1/users?userType=${typeToFetch}`, {
+          const res = await axios.get(`${API_URL}/api/v1/users?userType=${typeToFetch}`, {
             headers: { Authorization: `Bearer ${token}` }
           });
           if (res.data.status === 'success') {
