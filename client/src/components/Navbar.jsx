@@ -63,7 +63,6 @@ const Navbar = () => {
   }, []);
 
   useEffect(() => {
-    // Poll unread count every 10 seconds when token is active
     let interval;
     if (token) {
       fetchUnreadCount();
@@ -101,19 +100,23 @@ const Navbar = () => {
   // Determine if profile is incomplete
   const isProfileIncomplete = user && (!user.phone || !user.address || !user.name);
 
-  // Set navigation links based on auth and completeness
+  // Set navigation links based on auth, role, and completeness
   let navLinks = [];
   if (!token) {
     navLinks = [
       { name: 'Home', path: '/' },
-      { name: 'Analysis', path: '/analysis' },
+      { name: 'Analyze', path: '/analysis' },
+      { name: 'About', path: '/#about' },
+      { name: 'Contact', path: '/#contact' },
       { name: 'Login', path: '/login' },
     ];
   } else if (!isProfileIncomplete) {
     navLinks = [
       { name: 'Home', path: '/' },
-      { name: 'Analysis', path: '/analysis' },
-      { name: 'Messages', path: '/messages' },
+      { name: 'Analyze', path: '/analysis' },
+      { name: 'Dashboard', path: '/dashboard' },
+      { name: 'About', path: '/#about' },
+      { name: 'Contact', path: '/#contact' },
     ];
   }
 
@@ -125,6 +128,30 @@ const Navbar = () => {
       return (names[0][0] + names[1][0]).toUpperCase();
     }
     return user.name[0].toUpperCase();
+  };
+
+  // Custom click handler to support smooth hashing transitions inside SPA
+  const handleNavClick = (path) => {
+    setIsOpen(false);
+    if (path.startsWith('/#')) {
+      const hash = path.substring(1);
+      if (location.pathname === '/') {
+        // If already on Home, scroll smoothly
+        try {
+          const element = document.querySelector(hash);
+          if (element) {
+            element.scrollIntoView({ behavior: 'smooth' });
+          }
+        } catch (err) {
+          console.warn("Invalid CSS selector in navbar scroll:", hash, err);
+        }
+      } else {
+        // Navigate Home and hash scrolling will be handled in Home's useEffect
+        navigate(path);
+      }
+    } else {
+      navigate(path);
+    }
   };
 
   return (
@@ -146,27 +173,18 @@ const Navbar = () => {
         {/* Desktop Menu */}
         <div className="hidden md:flex items-center gap-6">
           {navLinks.map((link) => (
-            <Link
+            <button
               key={link.name}
-              to={link.path}
-              className={`text-sm font-semibold transition-all ${
-                location.pathname === link.path
+              onClick={() => handleNavClick(link.path)}
+              className={`text-sm font-semibold transition-all focus:outline-none ${
+                location.pathname === link.path || (link.path.startsWith('/#') && location.pathname === '/' && location.hash === link.path.substring(1))
                   ? 'text-primary-600 font-bold'
                   : 'text-slate-600 hover:text-primary-500'
               }`}
             >
               {link.name}
-            </Link>
+            </button>
           ))}
-
-          {token && !isProfileIncomplete && (
-            <Link
-              to="/dashboard"
-              className="bg-primary-600 text-white px-5 py-2 rounded-full font-semibold hover:bg-primary-700 shadow-md hover:shadow-lg transition-all transform hover:-translate-y-0.5 mr-2"
-            >
-              Dashboard
-            </Link>
-          )}
 
           {/* Premium Notification Bell (Desktop) */}
           {token && user && !isProfileIncomplete && (
@@ -333,25 +351,14 @@ const Navbar = () => {
       {isOpen && (
         <div className="md:hidden mt-4 pb-4 space-y-4 flex flex-col border-t border-slate-100 pt-4 animate-fade-in">
           {navLinks.map((link) => (
-            <Link
+            <button
               key={link.name}
-              to={link.path}
-              onClick={() => setIsOpen(false)}
-              className="block text-slate-700 font-semibold px-4 py-2.5 hover:bg-slate-50 rounded-xl"
+              onClick={() => handleNavClick(link.path)}
+              className="block w-full text-left text-slate-700 font-semibold px-4 py-2.5 hover:bg-slate-50 rounded-xl text-sm"
             >
               {link.name}
-            </Link>
+            </button>
           ))}
-
-          {token && !isProfileIncomplete && (
-            <Link
-              to="/dashboard"
-              onClick={() => setIsOpen(false)}
-              className="block bg-primary-600 text-white text-center px-4 py-2.5 mx-4 rounded-full font-semibold shadow-md"
-            >
-              Dashboard
-            </Link>
-          )}
 
           {token && user && (
             <div className="mx-4 p-4 bg-slate-50 rounded-2xl space-y-3">

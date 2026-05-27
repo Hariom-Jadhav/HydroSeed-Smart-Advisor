@@ -39,7 +39,12 @@ const Profile = () => {
   }, []);
 
   const handleChange = (e) => {
-    setFormData({ ...formData, [e.target.name]: e.target.value });
+    let { name, value } = e.target;
+    if (name === 'phone') {
+      // Keep only digits and slice to maximum of 10 digits
+      value = value.replace(/\D/g, '').slice(0, 10);
+    }
+    setFormData({ ...formData, [name]: value });
   };
 
   const selectRole = (selectedRole) => {
@@ -58,6 +63,12 @@ const Profile = () => {
     // Validate name, phone, address, and role safely to prevent runtime crashes
     if (!nameVal || !phoneVal || !addressVal || !formData.role) {
       setMessage({ type: 'error', text: 'All required fields must be completed.' });
+      setLoading(false);
+      return;
+    }
+
+    if (phoneVal.length !== 10) {
+      setMessage({ type: 'error', text: 'Phone number must be exactly 10 digits.' });
       setLoading(false);
       return;
     }
@@ -200,12 +211,15 @@ const Profile = () => {
             <div className="relative">
               <FiPhone className="absolute left-3 top-3.5 text-slate-400 text-lg" />
               <input 
-                type="text" 
+                type="tel" 
                 name="phone"
                 value={formData.phone}
                 onChange={handleChange}
                 required
-                placeholder="Enter your contact number"
+                maxLength="10"
+                pattern="[0-9]{10}"
+                inputMode="numeric"
+                placeholder="Enter 10-digit phone number"
                 className="w-full pl-10 pr-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-primary-500 focus:bg-white outline-none transition-all shadow-sm"
               />
             </div>

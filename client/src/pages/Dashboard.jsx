@@ -20,6 +20,7 @@ const Dashboard = () => {
   }
 
   const [usersList, setUsersList] = useState([]);
+  const [analysesList, setAnalysesList] = useState([]);
   const [expandedUser, setExpandedUser] = useState(null);
   const [loading, setLoading] = useState(true);
   
@@ -41,7 +42,24 @@ const Dashboard = () => {
           setLoading(false);
         }
       };
+
+      const fetchAnalyses = async () => {
+        if (currentUser.role !== 'contractor') {
+          try {
+            const res = await axios.get(`${API_URL}/api/v1/analyses`, {
+              headers: { Authorization: `Bearer ${token}` }
+            });
+            if (res.data.status === 'success') {
+              setAnalysesList(res.data.data.analyses);
+            }
+          } catch (err) {
+            console.error("Failed to fetch past analyses", err);
+          }
+        }
+      };
+
       fetchUsers();
+      fetchAnalyses();
     } else {
       setLoading(false);
     }
@@ -278,7 +296,11 @@ const Dashboard = () => {
             </div>
             <div>
               <p className="text-xs text-slate-400 font-semibold uppercase tracking-wider">AI Suitability</p>
-              <h3 className="text-2xl font-bold text-slate-800 mt-0.5">86% Avg</h3>
+              <h3 className="text-2xl font-bold text-slate-800 mt-0.5">
+                {analysesList.length > 0 
+                  ? `${Math.round(analysesList.reduce((acc, curr) => acc + curr.score, 0) / analysesList.length)}% Avg` 
+                  : 'N/A'}
+              </h3>
             </div>
           </div>
         </div>
@@ -298,33 +320,78 @@ const Dashboard = () => {
 
       {/* Main Grid Section */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-        {/* Left Column: Recent Analyses */}
-        <div className="lg:col-span-2 glass p-6 shadow-sm">
-          <h2 className="text-xl font-bold text-slate-800 mb-5">Recent Land Analyses</h2>
-          <div className="space-y-4">
-            <div className="flex flex-col sm:flex-row items-center justify-between p-4 bg-slate-50/50 border border-slate-100 rounded-2xl hover:shadow-sm transition-shadow gap-4">
-              <div className="flex items-center gap-4 w-full">
-                <div 
-                  className="w-16 h-16 bg-slate-200 rounded-xl bg-cover bg-center shrink-0 shadow-sm" 
-                  style={{backgroundImage: 'url("https://images.unsplash.com/photo-1592424001807-6953f93ce0db?ixlib=rb-4.0.3&auto=format&fit=crop&w=200&q=80")'}}
-                ></div>
-                <div className="overflow-hidden">
-                  <h4 className="font-bold text-slate-800 text-sm truncate">North Ridge Plot</h4>
-                  <p className="text-xs text-slate-400 mt-0.5 truncate">High vegetation need • Loam Soil</p>
-                </div>
-              </div>
-              <div className="text-right w-full sm:w-auto shrink-0 flex sm:flex-col justify-between items-center sm:items-end">
-                <span className="inline-block px-3 py-1 bg-green-100 text-green-700 rounded-full text-xs font-bold mb-1">
-                  Score: 92/100
+        {/* Left Column: Recent Land Analyses (or dynamic empty state if none exist yet) */}
+        <div className="lg:col-span-2 glass p-6 shadow-sm flex flex-col justify-between">
+          <div>
+            <h2 className="text-xl font-bold text-slate-800 mb-5 flex items-center gap-2">
+              <span>Recent Land Analyses</span>
+              {analysesList.length > 0 && (
+                <span className="bg-primary-100 text-primary-800 text-xs px-2.5 py-0.5 rounded-full font-bold">
+                  {analysesList.length} Archived
                 </span>
-                <p className="text-[10px] text-slate-400">2 days ago</p>
+              )}
+            </h2>
+            
+            {analysesList.length > 0 ? (
+              <div className="space-y-4">
+                {analysesList.slice(0, 3).map((analysis) => (
+                  <div 
+                    key={analysis._id} 
+                    onClick={() => navigate('/analysis')}
+                    className="flex flex-col sm:flex-row items-center justify-between p-4 bg-slate-50/50 border border-slate-100 rounded-2xl hover:shadow-sm hover:border-primary-200 transition-all cursor-pointer gap-4"
+                  >
+                    <div className="flex items-center gap-4 w-full">
+                      <div 
+                        className="w-16 h-16 bg-slate-200 rounded-xl bg-cover bg-center shrink-0 shadow-sm" 
+                        style={{backgroundImage: `url("${analysis.imageUrl}")`}}
+                      ></div>
+                      <div className="overflow-hidden">
+                        <h4 className="font-bold text-slate-800 text-sm truncate">{analysis.soilType} Diagnostic</h4>
+                        <p className="text-xs text-slate-400 mt-0.5 truncate">{analysis.recommendation || 'No recommendation provided.'}</p>
+                      </div>
+                    </div>
+                    <div className="text-right w-full sm:w-auto shrink-0 flex sm:flex-col justify-between items-center sm:items-end">
+                      <span className="inline-block px-3 py-1 bg-green-100 text-green-700 rounded-full text-xs font-bold mb-1">
+                        Score: {analysis.score}/100
+                      </span>
+                      <p className="text-[10px] text-slate-400">{new Date(analysis.date).toLocaleDateString()}</p>
+                    </div>
+                  </div>
+                ))}
               </div>
-            </div>
+            ) : (
+              <div className="text-center py-12 bg-slate-50/50 rounded-3xl border border-dashed border-slate-200 p-8 flex flex-col items-center justify-center my-auto min-h-[250px]">
+                <div className="w-14 h-14 bg-primary-50 rounded-full flex items-center justify-center mb-4 border border-primary-100 text-primary-600">
+                  <FiActivity className="text-2xl" />
+                </div>
+                <h4 className="font-bold text-slate-700 text-sm">No past analyses found</h4>
+                <p className="text-xs text-slate-400 mt-1 max-w-sm">
+                  You haven't run any terrain diagnostics yet. Upload your soil photo to instantly analyze slope, drainage, compaction, and pH ratings!
+                </p>
+                <Link
+                  to="/analysis"
+                  className="mt-5 px-5 py-2.5 bg-primary-600 hover:bg-primary-700 text-white rounded-xl text-xs font-bold shadow-md hover:shadow-lg transition-all"
+                >
+                  Start Free AI Analysis
+                </Link>
+              </div>
+            )}
           </div>
+          
+          {analysesList.length > 0 && (
+            <div className="mt-6 text-center">
+              <Link 
+                to="/analysis"
+                className="inline-block text-xs font-bold text-primary-600 hover:text-primary-700 transition-colors"
+              >
+                Inspect All Analyses in Diagnostic Center →
+              </Link>
+            </div>
+          )}
         </div>
 
         {/* Right Column: Contractors List */}
-        <div className="glass p-6 shadow-sm">
+        <div className="lg:col-span-1 glass p-6 shadow-sm">
           <h2 className="text-xl font-bold text-slate-800 mb-5">Nearby Contractors</h2>
           
           {loading ? (
