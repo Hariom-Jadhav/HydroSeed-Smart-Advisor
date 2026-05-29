@@ -23,6 +23,88 @@ const Dashboard = () => {
   const [analysesList, setAnalysesList] = useState([]);
   const [expandedUser, setExpandedUser] = useState(null);
   const [loading, setLoading] = useState(true);
+
+  // Customer feedback & review states
+  const [activeFeedbacks, setActiveFeedbacks] = useState([]);
+  const [fetchingFeedbacks, setFetchingFeedbacks] = useState(false);
+  const [rating, setRating] = useState(5);
+  const [comment, setComment] = useState('');
+  const [submittingFeedback, setSubmittingFeedback] = useState(false);
+  const [feedbackError, setFeedbackError] = useState('');
+  const [feedbackSuccess, setFeedbackSuccess] = useState('');
+
+  const fetchFeedbacks = async (contractorId) => {
+    try {
+      setFetchingFeedbacks(true);
+      setFeedbackError('');
+      setFeedbackSuccess('');
+      const res = await axios.get(`${API_URL}/api/v1/feedbacks/contractor/${contractorId}`, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      if (res.data.status === 'success') {
+        setActiveFeedbacks(res.data.data.feedbacks);
+      }
+    } catch (err) {
+      console.error("Failed to fetch feedbacks", err);
+    } finally {
+      setFetchingFeedbacks(false);
+    }
+  };
+
+  const handleContractorClick = (contractorId) => {
+    if (expandedUser === contractorId) {
+      setExpandedUser(null);
+      setActiveFeedbacks([]);
+    } else {
+      setExpandedUser(contractorId);
+      setRating(5);
+      setComment('');
+      setFeedbackError('');
+      setFeedbackSuccess('');
+      fetchFeedbacks(contractorId);
+    }
+  };
+
+  const handleSubmitFeedback = async (e, contractorId) => {
+    e.preventDefault();
+    if (!comment.trim()) {
+      setFeedbackError('Please enter a comment.');
+      return;
+    }
+    try {
+      setSubmittingFeedback(true);
+      setFeedbackError('');
+      setFeedbackSuccess('');
+      const res = await axios.post(`${API_URL}/api/v1/feedbacks`, {
+        contractorId,
+        rating,
+        comment
+      }, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+
+      if (res.data.status === 'success') {
+        setFeedbackSuccess('Thank you for your feedback! The contractor has been notified.');
+        setComment('');
+        setRating(5);
+        fetchFeedbacks(contractorId);
+        
+        // Refresh contractor list to display new ratings immediately
+        const typeToFetch = currentUser.role === 'contractor' ? 'customer' : 'service_provider';
+        const usersRes = await axios.get(`${API_URL}/api/v1/users?userType=${typeToFetch}`, {
+          headers: { Authorization: `Bearer ${token}` }
+        });
+        if (usersRes.data.status === 'success') {
+          setUsersList(usersRes.data.data.users);
+        }
+      }
+    } catch (err) {
+      console.error("Feedback submission error:", err);
+      setFeedbackError(err.response?.data?.message || 'Failed to submit feedback.');
+    } finally {
+      setSubmittingFeedback(false);
+    }
+  };
   
   useEffect(() => {
     if (token && currentUser) {
@@ -276,19 +358,7 @@ const Dashboard = () => {
       </div>
 
       {/* Landowner Stats Grid */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-10">
-        <div className="glass p-6 border-l-4 border-l-green-500 shadow-sm">
-          <div className="flex items-center gap-4">
-            <div className="p-3 bg-green-50 rounded-2xl text-green-600">
-              <FiMap className="text-2xl" />
-            </div>
-            <div>
-              <p className="text-xs text-slate-400 font-semibold uppercase tracking-wider">Mapped Area</p>
-              <h3 className="text-2xl font-bold text-slate-800 mt-0.5">2.5 Acres</h3>
-            </div>
-          </div>
-        </div>
-        
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-10">
         <div className="glass p-6 border-l-4 border-l-blue-500 shadow-sm">
           <div className="flex items-center gap-4">
             <div className="p-3 bg-blue-50 rounded-2xl text-blue-600">
@@ -408,15 +478,18 @@ const Dashboard = () => {
                       ? 'border-primary-500 shadow-md ring-2 ring-primary-500/5' 
                       : 'border-slate-100 hover:border-primary-200'
                   }`}
-                  onClick={() => setExpandedUser(expandedUser === contractor._id ? null : contractor._id)}
+                  onClick={() => handleContractorClick(contractor._id)}
                 >
                   <div className="flex justify-between items-start">
                     <div className="overflow-hidden">
                       <h4 className="font-bold text-slate-800 text-sm truncate">
                         {contractor.companyName || contractor.name}
                       </h4>
-                      <div className="flex items-center gap-1 text-yellow-400 text-[10px] my-1">
-                        ★ ★ ★ ★ ★ <span className="text-slate-400 ml-1 font-semibold">(42)</span>
+                      <div className="flex items-center gap-1 text-yellow-500 text-xs my-1">
+                        {'★'.repeat(Math.round(contractor.ratingsAverage || 0)) + '☆'.repeat(5 - Math.round(contractor.ratingsAverage || 0))}
+                        <span className="text-slate-400 ml-1 font-semibold text-[10px]">
+                          ({contractor.ratingsQuantity > 0 ? (contractor.ratingsAverage || 0).toFixed(1) : '0'} • {contractor.ratingsQuantity || 0} reviews)
+                        </span>
                       </div>
                     </div>
                     {contractor.pricePerSqFt && (
@@ -431,7 +504,7 @@ const Dashboard = () => {
                   </p>
                   
                   {expandedUser === contractor._id && (
-                    <div className="mt-4 pt-4 border-t border-slate-100 animate-fade-in text-xs text-slate-600 space-y-2">
+                    <div className="mt-4 pt-4 border-t border-slate-100 animate-fade-in text-xs text-slate-600 space-y-3" onClick={(e) => e.stopPropagation()}>
                       <p><strong>Contact:</strong> {contractor.phone || 'Not provided'}</p>
                       {contractor.pricePerSqFt && (
                         <div>
@@ -446,6 +519,87 @@ const Dashboard = () => {
                       >
                         <FiMessageSquare /> Connect & Discuss Quote
                       </button>
+
+                      {/* Customer Feedbacks / Reviews list */}
+                      <div className="mt-4 pt-4 border-t border-slate-100">
+                        <h5 className="font-bold text-slate-800 text-xs mb-2">Customer Feedback</h5>
+                        {fetchingFeedbacks ? (
+                          <p className="text-[10px] text-slate-400 animate-pulse">Loading reviews...</p>
+                        ) : activeFeedbacks.length === 0 ? (
+                          <p className="text-[10px] text-slate-400 italic">No reviews yet for this contractor.</p>
+                        ) : (
+                          <div className="space-y-2 max-h-36 overflow-y-auto pr-1">
+                            {activeFeedbacks.map((f) => (
+                              <div key={f._id} className="p-2 bg-slate-50 border border-slate-100 rounded-xl">
+                                <div className="flex justify-between items-center text-[10px] mb-0.5">
+                                  <span className="font-bold text-slate-700">{f.customer?.name || 'Customer'}</span>
+                                  <span className="text-yellow-500 font-bold">
+                                    {'★'.repeat(f.rating) + '☆'.repeat(5 - f.rating)}
+                                  </span>
+                                </div>
+                                <p className="text-[10px] text-slate-500 leading-relaxed">{f.comment}</p>
+                              </div>
+                            ))}
+                          </div>
+                        )}
+                      </div>
+
+                      {/* Leave Feedback rating input and form */}
+                      {!activeFeedbacks.some(f => f.customer?._id === currentUser?._id || f.customer === currentUser?._id) && (
+                        <form onSubmit={(e) => handleSubmitFeedback(e, contractor._id)} className="mt-4 pt-4 border-t border-slate-100 space-y-2.5">
+                          <h5 className="font-bold text-slate-800 text-xs">Leave a Review</h5>
+                          
+                          {feedbackError && (
+                            <p className="text-[10px] text-red-500 bg-red-50 p-2 rounded-xl border border-red-100">
+                              {feedbackError}
+                            </p>
+                          )}
+                          {feedbackSuccess && (
+                            <p className="text-[10px] text-green-500 bg-green-50 p-2 rounded-xl border border-green-100 animate-pulse">
+                              {feedbackSuccess}
+                            </p>
+                          )}
+
+                          <div className="flex items-center gap-2">
+                            <span className="text-[10px] font-semibold text-slate-500">Rating:</span>
+                            <div className="flex gap-1">
+                              {[1, 2, 3, 4, 5].map((star) => (
+                                <button
+                                  type="button"
+                                  key={star}
+                                  onClick={() => setRating(star)}
+                                  className="text-sm transition-transform hover:scale-110 focus:outline-none"
+                                >
+                                  {star <= rating ? (
+                                    <span className="text-yellow-500">★</span>
+                                  ) : (
+                                    <span className="text-slate-300">☆</span>
+                                  )}
+                                </button>
+                              ))}
+                            </div>
+                          </div>
+
+                          <div>
+                            <textarea
+                              rows="2"
+                              value={comment}
+                              onChange={(e) => setComment(e.target.value)}
+                              placeholder="Share your experience working with this contractor..."
+                              className="w-full p-2 text-[10px] bg-slate-50 border border-slate-200 rounded-xl focus:ring-1 focus:ring-primary-500 focus:bg-white outline-none transition-all resize-none"
+                              required
+                            />
+                          </div>
+
+                          <button
+                            type="submit"
+                            disabled={submittingFeedback}
+                            className="w-full py-2 bg-gradient-to-r from-primary-600 to-emerald-600 hover:from-primary-700 hover:to-emerald-700 text-white rounded-xl text-[10px] font-bold shadow-md transition-all disabled:opacity-50"
+                          >
+                            {submittingFeedback ? 'Submitting...' : 'Submit Feedback'}
+                          </button>
+                        </form>
+                      )}
                     </div>
                   )}
                   

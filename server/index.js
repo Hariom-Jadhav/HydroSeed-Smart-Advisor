@@ -13,6 +13,7 @@ const authRouter = require('./routes/authRoutes');
 const userRouter = require('./routes/userRoutes');
 const messageRouter = require('./routes/messageRoutes');
 const analysisRouter = require('./routes/analysisRoutes');
+const feedbackRouter = require('./routes/feedbackRoutes');
 
 // Load env vars
 dotenv.config();
@@ -32,6 +33,7 @@ app.use('/api/v1/auth', authRouter);
 app.use('/api/v1/users', userRouter);
 app.use('/api/v1/messages', messageRouter);
 app.use('/api/v1/analyses', analysisRouter);
+app.use('/api/v1/feedbacks', feedbackRouter);
 
 // Health Check Endpoint
 app.get('/api/health', (req, res) => {

@@ -113,8 +113,9 @@ const Navbar = () => {
   } else if (!isProfileIncomplete) {
     navLinks = [
       { name: 'Home', path: '/' },
-      { name: 'Analyze', path: '/analysis' },
       { name: 'Dashboard', path: '/dashboard' },
+      { name: 'Analyze', path: '/analysis' },
+      { name: 'Messages', path: '/messages' },
       { name: 'About', path: '/#about' },
       { name: 'Contact', path: '/#contact' },
     ];

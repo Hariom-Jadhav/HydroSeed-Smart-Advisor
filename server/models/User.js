@@ -37,6 +37,17 @@ const userSchema = new mongoose.Schema({
   bio: {
     type: String,
   },
+  ratingsAverage: {
+    type: Number,
+    default: 0,
+    min: [0, 'Rating must be above 0.0'],
+    max: [5, 'Rating must be below 5.0'],
+    set: val => Math.round(val * 10) / 10
+  },
+  ratingsQuantity: {
+    type: Number,
+    default: 0
+  },
   password: {
     type: String,
     required: [true, 'Please provide a password'],
