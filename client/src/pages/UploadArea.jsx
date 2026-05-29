@@ -1,7 +1,7 @@
 import React, { useState, useCallback, useEffect } from 'react';
 import { useDropzone } from 'react-dropzone';
 import { FiUploadCloud, FiMap, FiCheckCircle, FiCloudRain, FiCalendar, FiThermometer, FiMapPin, FiSearch, FiActivity, FiCloud } from 'react-icons/fi';
-import { useNavigate } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import axios from 'axios';
 import { API_URL } from '../config';
 
@@ -69,7 +69,35 @@ const UploadArea = () => {
     return new Promise((resolve, reject) => {
       const reader = new FileReader();
       reader.readAsDataURL(fileObj);
-      reader.onload = () => resolve(reader.result);
+      reader.onload = (event) => {
+        const img = new Image();
+        img.src = event.target.result;
+        img.onload = () => {
+          try {
+            const canvas = document.createElement('canvas');
+            const max_width = 800; // Resize to a max width of 800px (perfect for soil diagnostic preview)
+            const scale = max_width / img.width;
+            
+            if (img.width > max_width) {
+              canvas.width = max_width;
+              canvas.height = img.height * scale;
+            } else {
+              canvas.width = img.width;
+              canvas.height = img.height;
+            }
+            
+            const ctx = canvas.getContext('2d');
+            ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+            
+            // Compress to JPEG with 70% quality
+            const compressedBase64 = canvas.toDataURL('image/jpeg', 0.7);
+            resolve(compressedBase64);
+          } catch (e) {
+            reject(e);
+          }
+        };
+        img.onerror = error => reject(error);
+      };
       reader.onerror = error => reject(error);
     });
   };
@@ -77,65 +105,62 @@ const UploadArea = () => {
   const handleAnalyze = async () => {
     if (!file) return;
     setIsAnalyzing(true);
-    
-    // Simulate AI analysis delay
-    setTimeout(async () => {
-      const mockResult = {
-        score: Math.floor(Math.random() * 21) + 75, // Random score between 75 and 95
-        soilType: 'Clay Loam',
-        drainage: 'Moderate',
-        moisture: 'Low (22%)',
-        phLevel: '6.5 (Slightly Acidic)',
-        organicMatter: '3.5% (Good)',
-        compaction: 'High',
-        erosionRisk: 'Moderate to High',
-        slopeAngle: '15 degrees',
-        recommendation: 'Add mulching for better moisture retention on slopes.'
-      };
 
-      try {
-        let base64Image = '';
-        if (file && !file.mockUrl) {
-          try {
-            base64Image = await getBase64(file);
-          } catch (e) {
-            console.error("Failed base64 conversion, using fallback URL", e);
-            base64Image = 'https://images.unsplash.com/photo-1592424001807-6953f93ce0db';
-          }
-        } else {
-          base64Image = file?.mockUrl || 'https://images.unsplash.com/photo-1592424001807-6953f93ce0db';
+    const mockResult = {
+      score: Math.floor(Math.random() * 21) + 75, // Random score between 75 and 95
+      soilType: 'Clay Loam',
+      drainage: 'Moderate',
+      moisture: 'Low (22%)',
+      phLevel: '6.5 (Slightly Acidic)',
+      organicMatter: '3.5% (Good)',
+      compaction: 'High',
+      erosionRisk: 'Moderate to High',
+      slopeAngle: '15 degrees',
+      recommendation: 'Add mulching for better moisture retention on slopes.'
+    };
+
+    try {
+      let base64Image = '';
+      if (file && !file.mockUrl) {
+        try {
+          base64Image = await getBase64(file);
+        } catch (e) {
+          console.error("Failed base64 conversion, using fallback URL", e);
+          base64Image = 'https://images.unsplash.com/photo-1592424001807-6953f93ce0db';
         }
-
-        // Post to backend database
-        const res = await axios.post(`${API_URL}/api/v1/analyses`, {
-          imageUrl: base64Image,
-          score: mockResult.score,
-          soilType: mockResult.soilType,
-          drainage: mockResult.drainage,
-          moisture: mockResult.moisture,
-          phLevel: mockResult.phLevel,
-          organicMatter: mockResult.organicMatter,
-          compaction: mockResult.compaction,
-          erosionRisk: mockResult.erosionRisk,
-          slopeAngle: mockResult.slopeAngle,
-          recommendation: mockResult.recommendation
-        }, {
-          headers: { Authorization: `Bearer ${token}` }
-        });
-
-        if (res.data.status === 'success') {
-          // Set result and refresh history
-          setResult(mockResult);
-          fetchHistory();
-        }
-      } catch (err) {
-        console.error("Failed to save analysis", err);
-        // Fallback display even if saving fails
-        setResult(mockResult);
-      } finally {
-        setIsAnalyzing(false);
+      } else {
+        base64Image = file?.mockUrl || 'https://images.unsplash.com/photo-1592424001807-6953f93ce0db';
       }
-    }, 2500);
+
+      // Post to backend database
+      const res = await axios.post(`${API_URL}/api/v1/analyses`, {
+        imageUrl: base64Image,
+        score: mockResult.score,
+        soilType: mockResult.soilType,
+        drainage: mockResult.drainage,
+        moisture: mockResult.moisture,
+        phLevel: mockResult.phLevel,
+        organicMatter: mockResult.organicMatter,
+        compaction: mockResult.compaction,
+        erosionRisk: mockResult.erosionRisk,
+        slopeAngle: mockResult.slopeAngle,
+        recommendation: mockResult.recommendation
+      }, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+
+      if (res.data.status === 'success') {
+        // Set result and refresh history
+        setResult(mockResult);
+        fetchHistory();
+      }
+    } catch (err) {
+      console.error("Failed to save analysis", err);
+      // Fallback display even if saving fails
+      setResult(mockResult);
+    } finally {
+      setIsAnalyzing(false);
+    }
   };
 
   // Weather searching using Open-Meteo
@@ -370,7 +395,7 @@ const UploadArea = () => {
                 )}
                 {result?.isHistorical && (
                   <div className="p-3 bg-slate-50 border border-slate-100 text-slate-500 rounded-xl text-center text-xs font-semibold">
-                    Viewing Historical Report saved on {new Date(result.date).toLocaleDateString()}
+                    Viewing Historical Report saved on {result.date ? new Date(result.date).toLocaleDateString() : new Date().toLocaleDateString()}
                   </div>
                 )}
               </div>
@@ -578,7 +603,7 @@ const UploadArea = () => {
                     </div>
                     <div className="mt-3 pt-3 border-t border-slate-100 flex items-center justify-between text-[9px] text-slate-400 font-semibold">
                       <span>pH: {report.phLevel || 'N/A'}</span>
-                      <span>{new Date(report.date).toLocaleDateString()}</span>
+                      <span>{report.date ? new Date(report.date).toLocaleDateString() : 'N/A'}</span>
                     </div>
                   </div>
                 </div>
