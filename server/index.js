@@ -26,7 +26,8 @@ connectDB();
 
 // Global Middlewares
 app.use(cors());
-app.use(express.json()); // Body parser
+app.use(express.json({ limit: '50mb' })); // Body parser with high payload limit for base64 terrain photos
+app.use(express.urlencoded({ limit: '50mb', extended: true }));
 
 // Mount Routes
 app.use('/api/v1/auth', authRouter);
